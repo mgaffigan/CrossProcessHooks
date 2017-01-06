@@ -23,9 +23,16 @@ namespace Itp.Win32.MdiHook.DemoClient
             window = ForeignMdiWindow.Get(demoProcess);
         }
 
+        MdiWindowSample last;
+
         private void button1_Click(object sender, EventArgs e)
         {
-            window.ShowWindow(new MdiWindowSample());
+            window.ShowWindow(last = new MdiWindowSample()
+            {
+                SurrogateLocation = new Point(100, 100),
+                SurrogateSize = new Size(250, 600)
+            });
+            btCloseLast.Enabled = true;
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -59,6 +66,12 @@ namespace Itp.Win32.MdiHook.DemoClient
             };
             tmrMove.Interval = 1000 / 24;
             tmrMove.Enabled = true;
+        }
+
+        private void btCloseLast_Click(object sender, EventArgs e)
+        {
+            last.Close();
+            btCloseLast.Enabled = false;
         }
     }
 }
