@@ -40,7 +40,14 @@ namespace Itp.Win32.MdiHook
 
         private void Dispose(bool disposing)
         {
-            ForeignWindow.Dispose();
+            try
+            {
+                ForeignWindow.Dispose();
+            }
+            catch (Exception ex) when (!disposing)
+            {
+                Debug.WriteLine($"Exception on finalizer\r\n{ex}");
+            }
         }
 
         public static ForeignMdiWindow Get(Process target)
