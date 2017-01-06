@@ -17,12 +17,15 @@ namespace Itp.Win32.MdiHook
         public const int
             WM_CLOSE = 0x0010,
             WM_ERASEBKGND = 0x0014,
-            WM_EXITSIZEMOVE = 0x0232;
+            WM_EXITSIZEMOVE = 0x0232,
+            WM_SYSCHAR = 0x0106;
 
         public const int
+            WS_EX_DLGMODALFRAME = 0x00000001,
             WS_EX_MDICHILD = 0x00000040,
             WS_EX_WINDOWEDGE = 0x00000100,
-            WS_EX_APPWINDOW = 0x00040000;
+            WS_EX_APPWINDOW = 0x00040000,
+            WS_EX_TOOLWINDOW = 0x00000080;
 
         public const int
             WS_OVERLAPPED = 0x00000000,
@@ -60,7 +63,7 @@ namespace Itp.Win32.MdiHook
 
         public static void SetParent(this Control control, IntPtr parent)
         {
-            var res = NativeMethods.SetParent(control.Handle, parent);
+            var res = SetParent(control.Handle, parent);
             if (res == IntPtr.Zero)
             {
                 throw new Win32Exception();
@@ -69,5 +72,26 @@ namespace Itp.Win32.MdiHook
 
         [DllImport(User32, SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr childAfter, string className, string windowTitle);
+
+        [DllImport(User32, CharSet = CharSet.Unicode)]
+        public static extern IntPtr SendMessage(HandleRef hWnd, int msg, int wParam, int lParam);
+
+        public const int
+            SWP_NOSIZE = 0x0001,
+            SWP_NOMOVE = 0x0002,
+            SWP_NOZORDER = 0x0004,
+            SWP_FRAMECHANGED = 0x0020;
+        public const int
+            GWL_EXSTYLE = -20,
+            GWL_STYLE = -16;
+
+        [DllImport(User32, CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        [DllImport(User32, CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+        [DllImport(User32, SetLastError = true)]
+        public static extern bool SetWindowPos(IntPtr hwnd, IntPtr hwndInsertAfter, int x, int y, int width, int height, uint flags);
     }
 }

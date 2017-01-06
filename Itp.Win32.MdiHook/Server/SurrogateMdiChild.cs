@@ -21,32 +21,53 @@ namespace Itp.Win32.MdiHook.Server
         private bool IsResizable;
         private ISurrogateMdiChildContent ChildContent;
 
-        public SurrogateMdiChildControl Surrogate { get; }
+        private readonly SurrogateMdiChildControl Surrogate;
 
-        public IntPtr ContentPanelHandle => Surrogate.Handle;
+        IntPtr ISurrogateMdiChild.ContentPanelHandle => Surrogate.Handle;
 
-        public string Title
+        string ISurrogateMdiChild.Title
         {
             get { return Surrogate.Text; }
-            set { Surrogate.Text = value; }
+            set
+            {
+                Surrogate.AssertThread();
+                Surrogate.Text = value;
+            }
         }
 
-        public bool IsVisible
+        bool ISurrogateMdiChild.IsVisible
         {
             get { return Surrogate.Visible; }
-            set { Surrogate.Visible = value; }
+            set
+            {
+                Surrogate.AssertThread();
+                Surrogate.Visible = value;
+            }
         }
 
-        public Size Size
+        Size ISurrogateMdiChild.Size
         {
             get { return Surrogate.ClientSize; }
-            set { Surrogate.ClientSize = value; }
+            set
+            {
+                Surrogate.AssertThread();
+                Surrogate.ClientSize = value;
+            }
         }
 
-        public Point Location
+        Point ISurrogateMdiChild.Location
         {
             get { return Surrogate.Location; }
-            set { Surrogate.Location = value; }
+            set
+            {
+                Surrogate.AssertThread();
+                Surrogate.Location = value;
+            }
+        }
+
+        void ISurrogateMdiChild.Close()
+        {
+            Surrogate.Close();
         }
 
         public SurrogateMdiChild(HookedMdiWindow parent, string title, Rectangle location, bool isResizable, ISurrogateMdiChildContent childContent)
@@ -63,6 +84,17 @@ namespace Itp.Win32.MdiHook.Server
             this.Surrogate.ClientSize = location.Size;
             this.Surrogate.Location = location.Location;
             this.Surrogate.CreateControl();
+
+            // for some reason, these are re-added despite CreateParams
+            // so we have to remove them here
+            var hwnd = this.Surrogate.Handle;
+            var ws = GetWindowLong(hwnd, GWL_STYLE);
+            ws &= ~(WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+            ws &= ~(IsResizable ? 0 : WS_THICKFRAME);
+            SetWindowLong(hwnd, GWL_STYLE, ws);
+
+            // since we changed the window styles, we have to redraw
+            SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
         }
 
         public sealed class SurrogateMdiChildControl : Control
@@ -84,21 +116,29 @@ namespace Itp.Win32.MdiHook.Server
                 {
                     CreateParams cp = base.CreateParams;
                     cp.Parent = this.Proxy.Parent.MdiClientHwnd;
-                    cp.ExStyle = WS_EX_MDICHILD | WS_EX_WINDOWEDGE | WS_EX_APPWINDOW;
+
                     cp.Style = WS_OVERLAPPEDWINDOW | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-                    if (!this.Proxy.IsResizable)
-                    {
-                        // remote the flags for the minimize and maximize buttons
-                        // ThickFrame represents the ability to resize by dragging the 
-                        // frame
-                        cp.Style &= ~(WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME);
-                    }
+                    // get rid of WS_MINIMIZEBOX | WS_MAXIMIZEBOX since minimize is dumb, and maximize doesn't work
+                    cp.Style &= ~(WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+                    // ThickFrame represents the ability to resize by dragging the border 
+                    cp.Style &= ~(this.Proxy.IsResizable ? 0 : WS_THICKFRAME);
+
+                    // no WS_EX_APPWINDOW since we don't show in taskbar
+                    // WS_EX_DLGMODALFRAME for no icon
+                    cp.ExStyle = WS_EX_MDICHILD | WS_EX_WINDOWEDGE | WS_EX_DLGMODALFRAME;
+                    
                     return cp;
                 }
             }
 
             protected override void WndProc(ref Message m)
             {
+                if (m.Msg == WM_SYSCHAR)
+                {
+                    // for some reason, we get a deadlock when Ctrl+Spacebar is pressed with a 
+                    // foreign window focused.  That happens on processing of WM_SYSCHAR
+                    return;
+                }
                 if (m.Msg == WM_CLOSE)
                 {
                     try
@@ -136,6 +176,11 @@ namespace Itp.Win32.MdiHook.Server
                     {
                         this.Proxy.ChildContent.Ping();
                     }
+                    // Something in Framework is using SendMessage, which does not play nicely with COM
+                    catch (COMException cex) when (cex.HResult == Esatto.Win32.Com.NativeMethods.RPC_E_CANTCALLOUT_ININPUTSYNCCALL)
+                    {
+                        // no-op, we will ping next time around.
+                    }
                     catch (Exception ex)
                     {
                         Debug.WriteLine("Ping failed, closing form");
@@ -149,16 +194,30 @@ namespace Itp.Win32.MdiHook.Server
 
                 base.WndProc(ref m);
             }
+
+            public void Close()
+            {
+                AssertThread();
+
+                SendMessage(new HandleRef(this, Handle), WM_CLOSE, 0, 0);
+            }
+
+            public void AssertThread()
+            {
+                if (InvokeRequired)
+                {
+                    throw new InvalidOperationException("Invalid cross thread access to SurrogateMdiChild");
+                }
+            }
         }
 
+        // may be called from finalizer thread via HookedMdiWindow
         public void ForceClose()
         {
-            this.Surrogate.Visible = false;
-        }
-
-        public void Close()
-        {
-            ForceClose();
+            this.Surrogate.BeginInvoke(new Action(() =>
+            {
+                this.Surrogate.Visible = false;
+            }));
         }
     }
 }

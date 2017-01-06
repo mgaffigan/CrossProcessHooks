@@ -38,20 +38,26 @@ namespace Itp.Win32.MdiHook.Server
                     return;
                 }
 
-                firstChild.Surrogate.Invoke(new Action(DestroyAllForms));
+                DestroyAllForms();
             }
         }
 
         private void DestroyAllForms()
         {
+            IEnumerable<SurrogateMdiChild> children;
             lock (syncSurrogatedChildren)
             {
-                foreach (var child in SurrogatedChildren)
-                {
-                    child.ForceClose();
-                }
+                children = SurrogatedChildren.ToArray();
 
                 SurrogatedChildren.Clear();
+            }
+
+            // we call forceclose outside of the lock since it will call back to 
+            // NotifyClosed on the UI thread, which would deadlock.
+            foreach (var child in SurrogatedChildren)
+            {
+                // ForceClose marshalls to UI thread
+                child.ForceClose();
             }
         }
 
