@@ -1,4 +1,10 @@
-﻿using System;
+﻿// these have to be present, since the System.Diagnostics.Debug 
+// class is marked [Conditional("DEBUG")] and the Trace class is
+// marked with [Conditional("TRACE")] 
+#define TRACE
+#define DEBUG
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
