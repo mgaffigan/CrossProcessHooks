@@ -73,5 +73,10 @@ namespace Itp.Win32.MdiHook.DemoClient
             last.Close();
             btCloseLast.Enabled = false;
         }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            window.ShowWindow(new MdiWindowSample() { IsMovable = false });
+        }
     }
 }

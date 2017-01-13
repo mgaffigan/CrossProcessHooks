@@ -16,6 +16,7 @@ namespace Itp.Win32.MdiHook
         private Size _SurrogateSize;
         private Point _SurrogateLocation;
         private bool _IsResizable;
+        private bool _IsMovable;
         private bool _IsVisible;
         private string _Title;
         private ISurrogateMdiChild Surrogate;
@@ -29,6 +30,7 @@ namespace Itp.Win32.MdiHook
             this.SurrogateSize = new Size(400, 300);
             this._IsVisible = true;
             this._IsResizable = true;
+            this._IsMovable = true;
             this._Title = "Foreign Content";
         }
 
@@ -117,6 +119,17 @@ namespace Itp.Win32.MdiHook
             }
         }
 
+        public bool IsMovable
+        {
+            get { return _IsMovable; }
+            set
+            {
+                AssertNotCreated();
+
+                _IsMovable = value;
+            }
+        }
+
         private void AssertCreated()
         {
             if (Surrogate == null)
@@ -130,7 +143,7 @@ namespace Itp.Win32.MdiHook
             Contract.Requires(foreignWindow != null);
 
             this.AssertNotCreated();
-            Surrogate = foreignWindow.CreateChild(Text, new Rectangle(SurrogateLocation, SurrogateSize), IsResizable, Proxy);
+            Surrogate = foreignWindow.CreateChild(Text, new Rectangle(SurrogateLocation, SurrogateSize), IsResizable, IsMovable, Proxy);
             if (IsHandleCreated)
             {
                 this.SetParent(Surrogate.ContentPanelHandle);

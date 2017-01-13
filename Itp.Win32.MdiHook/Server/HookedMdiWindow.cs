@@ -90,17 +90,17 @@ namespace Itp.Win32.MdiHook.Server
                 this.Parent.Dispose();
             }
 
-            public ISurrogateMdiChild CreateChild(string title, Rectangle location, bool isResizable, ISurrogateMdiChildContent childContent)
+            public ISurrogateMdiChild CreateChild(string title, Rectangle location, bool isResizable, bool isMovable, ISurrogateMdiChildContent childContent)
             {
-                return Parent.CreateChild(title, location, isResizable, childContent);
+                return Parent.CreateChild(title, location, isResizable, isMovable, childContent);
             }
         }
 
-        public ISurrogateMdiChild CreateChild(string title, Rectangle location, bool isResizable, ISurrogateMdiChildContent childContent)
+        public ISurrogateMdiChild CreateChild(string title, Rectangle location, bool isResizable, bool isMovable, ISurrogateMdiChildContent childContent)
         {
             lock (syncSurrogatedChildren)
             {
-                var newChild = new SurrogateMdiChild(this, title, location, isResizable, childContent);
+                var newChild = new SurrogateMdiChild(this, title, location, isResizable, isMovable, childContent);
                 SurrogatedChildren.Add(newChild);
                 return newChild;
             }

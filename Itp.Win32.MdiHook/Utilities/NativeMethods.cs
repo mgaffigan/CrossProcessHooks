@@ -18,7 +18,11 @@ namespace Itp.Win32.MdiHook
             WM_CLOSE = 0x0010,
             WM_ERASEBKGND = 0x0014,
             WM_EXITSIZEMOVE = 0x0232,
-            WM_SYSCHAR = 0x0106;
+            WM_SYSCHAR = 0x0106,
+            WM_SYSCOMMAND = 0x0112;
+
+        public const int
+            SC_MOVE = 0xF010;
 
         public const int
             WS_EX_DLGMODALFRAME = 0x00000001,
@@ -54,6 +58,14 @@ namespace Itp.Win32.MdiHook
 
         public const int
             WS_OVERLAPPEDWINDOW = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+
+        public static int SC_FROM_WPARAM(IntPtr wparam)
+        {
+            // In WM_SYSCOMMAND messages, the four low-order bits of the wParam parameter are used internally by
+            // the system. To obtain the correct result when testing the value of wParam, an application must
+            // combine the value 0xFFF0 with the wParam value by using the bitwise AND operator.
+            return ((int)wparam & 0xfff0);
+        }
 
         [DllImport(User32, SetLastError = true)]
         public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out int processId);

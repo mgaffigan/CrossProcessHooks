@@ -14,6 +14,6 @@ namespace Itp.Win32.MdiHook.IPC
     public interface IHookedMdiWindow : IDisposable
     {
         ISurrogateMdiChild CreateChild(string title, Rectangle location,
-            bool isResizable, ISurrogateMdiChildContent childContent);
+            bool isResizable, bool isMovable, ISurrogateMdiChildContent childContent);
     }
 }

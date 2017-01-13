@@ -1,4 +1,10 @@
-﻿using Itp.Win32.MdiHook.IPC;
+﻿// these have to be present, since the System.Diagnostics.Debug 
+// class is marked [Conditional("DEBUG")] and the Trace class is
+// marked with [Conditional("TRACE")] 
+#define TRACE
+#define DEBUG
+
+using Itp.Win32.MdiHook.IPC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +25,7 @@ namespace Itp.Win32.MdiHook.Server
     {
         private HookedMdiWindow Parent;
         private bool IsResizable;
+        private bool IsMovable;
         private ISurrogateMdiChildContent ChildContent;
 
         private readonly SurrogateMdiChildControl Surrogate;
@@ -70,13 +77,14 @@ namespace Itp.Win32.MdiHook.Server
             Surrogate.Close();
         }
 
-        public SurrogateMdiChild(HookedMdiWindow parent, string title, Rectangle location, bool isResizable, ISurrogateMdiChildContent childContent)
+        public SurrogateMdiChild(HookedMdiWindow parent, string title, Rectangle location, bool isResizable, bool isMovable, ISurrogateMdiChildContent childContent)
         {
             Contract.Requires(parent != null);
             Contract.Requires(childContent != null);
 
             this.Parent = parent;
             this.IsResizable = isResizable;
+            this.IsMovable = isMovable;
             this.ChildContent = childContent;
 
             this.Surrogate = new SurrogateMdiChildControl(this);
@@ -139,7 +147,15 @@ namespace Itp.Win32.MdiHook.Server
                     // foreign window focused.  That happens on processing of WM_SYSCHAR
                     return;
                 }
-                if (m.Msg == WM_CLOSE)
+                else if (m.Msg == WM_SYSCOMMAND)
+                {
+                    if (SC_FROM_WPARAM(m.WParam) == SC_MOVE && !Proxy.IsMovable)
+                    {
+                        // WM_SYSCOMMAND SC_MOVE == start move operation.  Which we cancel by not calling DefWndProc.
+                        return;
+                    }
+                }
+                else if (m.Msg == WM_CLOSE)
                 {
                     try
                     {
