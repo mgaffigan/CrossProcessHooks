@@ -10,10 +10,7 @@ namespace Itp.Win32.MdiHook.IPC
     // public for regAsm
     [ComVisible(true)]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    public interface IHookedProcess
+    public interface IWindowHook : IDisposable
     {
-        IHookedMdiWindow GetMdiWindow(IntPtr hWndMdiClient);
-
-        IWindowHook RegisterHook(HookRegistrationRecord hook, IDcsMarshalledObserver observer);
     }
 }

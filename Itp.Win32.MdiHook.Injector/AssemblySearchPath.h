@@ -8,7 +8,7 @@ using namespace System::Collections::Generic;
 
 namespace Itp::Win32::MdiHook
 {
-	private ref class AssemblySearchPath
+	public ref class AssemblySearchPath
 	{
 	public:
 

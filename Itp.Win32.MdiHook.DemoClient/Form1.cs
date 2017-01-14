@@ -5,6 +5,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -14,13 +15,31 @@ namespace Itp.Win32.MdiHook.DemoClient
     public partial class Form1 : Form
     {
         ForeignMdiWindow window;
+        IntPtr notepad;
 
         public Form1()
         {
             InitializeComponent();
 
-            var demoProcess = Process.GetProcessesByName("Itp.Win32.DemoMdiApplication").Single();
-            window = ForeignMdiWindow.Get(demoProcess);
+            var demoProcess = Process.GetProcessesByName("Itp.Win32.DemoMdiApplication").SingleOrDefault();
+            if (demoProcess != null)
+            {
+                window = ForeignMdiWindow.Get(demoProcess);
+            }
+            else
+            {
+                foreach (var a in this.Controls.Cast<Control>())
+                {
+                    if (a == btHookNotepad)
+                    {
+                        // no-op
+                    }
+                    else
+                    {
+                        a.Enabled = false;
+                    }
+                }
+            }
         }
 
         MdiWindowSample last;
@@ -78,5 +97,25 @@ namespace Itp.Win32.MdiHook.DemoClient
         {
             window.ShowWindow(new MdiWindowSample() { IsMovable = false });
         }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            if (notepad == IntPtr.Zero)
+            {
+                var proc = Process.Start(@"c:\windows\syswow64\notepad.exe");
+
+                System.Threading.Thread.Sleep(200);
+                var mw = proc.MainWindowHandle;
+                notepad = FindWindowEx(mw, IntPtr.Zero, "Edit", null);
+            }
+            var messageLog = new MessageLogForm(notepad);
+            messageLog.Show();
+        }
+
+        const string User32 = "user32.dll";
+
+        [DllImport(User32, SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr childAfter, string className, string windowTitle);
+
     }
 }

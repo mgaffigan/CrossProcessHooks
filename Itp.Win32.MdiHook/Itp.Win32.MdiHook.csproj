@@ -229,8 +229,25 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=1.1.37.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\libs\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\libs\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\libs\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\libs\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>..\libs\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -255,16 +272,23 @@
     <Compile Include="..\..\..\..\..\..\..\dev\tfsroot\Esatto\Branches\Hammer\Source\Esatto.Win32.CommonControls\Com\RotRegistration.cs">
       <Link>Utilities\Com Imports\RotRegistration.cs</Link>
     </Compile>
+    <Compile Include="Client\ForeignHook.cs" />
     <Compile Include="Client\ForeignMdiWindow.cs" />
+    <Compile Include="Client\ForeignProcess.cs" />
+    <Compile Include="Client\IMessageHookHandler.cs" />
     <Compile Include="Client\SurrogatedMdiChild.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Common\HookRegistrationRecord.cs" />
+    <Compile Include="Common\IDcsMarshalledObserver.cs" />
+    <Compile Include="Common\IWindowHook.cs" />
     <Compile Include="Common\IpcConstants.cs" />
     <Compile Include="Common\ISurrogateMdiChildContent.cs" />
     <Compile Include="Common\ISurrogateMdiChild.cs" />
     <Compile Include="Common\IHookedMdiWindow.cs" />
     <Compile Include="Common\IHookedProcess.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Server\HookManager.cs" />
     <Compile Include="Server\SurrogateMdiChild.cs" />
     <Compile Include="Server\HookedMdiWindow.cs" />
     <Compile Include="Server\HookedProcess.cs" />

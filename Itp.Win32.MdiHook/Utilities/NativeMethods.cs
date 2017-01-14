@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32.SafeHandles;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -12,9 +13,11 @@ namespace Itp.Win32.MdiHook
     internal static class NativeMethods
     {
         const string User32 = "user32.dll";
+        const string Kernel32 = "kernel32.dll";
         internal const int MAX_PATH = 260;
 
         public const int
+            WM_DESTROY = 0x0002,
             WM_CLOSE = 0x0010,
             WM_ERASEBKGND = 0x0014,
             WM_EXITSIZEMOVE = 0x0232,
@@ -58,6 +61,13 @@ namespace Itp.Win32.MdiHook
 
         public const int
             WS_OVERLAPPEDWINDOW = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+
+        public const int
+            HC_ACTION = 0;
+
+        public const int
+            WH_GETMESSAGE = 3,
+            WH_CALLWNDPROC = 4;
 
         public static int SC_FROM_WPARAM(IntPtr wparam)
         {
@@ -105,5 +115,32 @@ namespace Itp.Win32.MdiHook
 
         [DllImport(User32, SetLastError = true)]
         public static extern bool SetWindowPos(IntPtr hwnd, IntPtr hwndInsertAfter, int x, int y, int width, int height, uint flags);
+
+        public delegate IntPtr GetOrSendWndProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+        [DllImport(User32, ExactSpelling = true, SetLastError = true)]
+        public static extern bool UnhookWindowsHookEx(IntPtr p);
+
+        [DllImport(User32, CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern HookSafeHandle SetWindowsHookEx(int idHook, GetOrSendWndProc wndProc, IntPtr hMod, int dwThreadId);
+
+        [DllImport(User32, ExactSpelling = true)]
+        public static extern IntPtr CallNextHookEx(HookSafeHandle hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+        [DllImport(Kernel32)]
+        public static extern int GetCurrentThreadId();
+
+        public sealed class HookSafeHandle : SafeHandleZeroOrMinusOneIsInvalid
+        {
+            public HookSafeHandle()
+                : base(true)
+            {
+            }
+
+            protected override bool ReleaseHandle()
+            {
+                return UnhookWindowsHookEx(handle);
+            }
+        }
     }
 }

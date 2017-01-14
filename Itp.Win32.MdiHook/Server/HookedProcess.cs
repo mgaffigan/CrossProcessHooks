@@ -16,9 +16,11 @@ namespace Itp.Win32.MdiHook.Server
         private static readonly object SyncCreateInstance = new object();
         public static HookedProcess Instance { get; private set; }
         private static RotRegistration RotRegistration;
+        private HookManager HookManager;
 
         public HookedProcess()
         {
+            this.HookManager = new HookManager();
         }
 
         internal static HookedProcess GetInstance()
@@ -41,6 +43,11 @@ namespace Itp.Win32.MdiHook.Server
         {
             var newWindow = new HookedMdiWindow(hWndMdiClient);
             return newWindow.GetProxy();
+        }
+
+        public IWindowHook RegisterHook(HookRegistrationRecord hook, IDcsMarshalledObserver observer)
+        {
+            return HookManager.AddRegistration(hook, observer);
         }
     }
 }
