@@ -67,7 +67,8 @@ namespace Itp.Win32.MdiHook
 
         public const int
             WH_GETMESSAGE = 3,
-            WH_CALLWNDPROC = 4;
+            WH_CALLWNDPROC = 4,
+            WH_CALLWNDPROCRET = 12;
 
         public static int SC_FROM_WPARAM(IntPtr wparam)
         {

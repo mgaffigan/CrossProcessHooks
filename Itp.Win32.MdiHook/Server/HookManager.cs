@@ -220,6 +220,16 @@ namespace Itp.Win32.MdiHook.Server
         }
 
         [StructLayout(LayoutKind.Sequential)]
+        private struct CWPRETSTRUCT
+        {
+            public IntPtr lResult;
+            public IntPtr lParam;
+            public IntPtr wParam;
+            public int message;
+            public IntPtr hwnd;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
         private struct MSG
         {
             public IntPtr hwnd;
@@ -257,7 +267,7 @@ namespace Itp.Win32.MdiHook.Server
                 }
                 try
                 {
-                    this.SendMessageHook = SetWindowsHookEx(WH_CALLWNDPROC, pSendMessageHook_Callback, IntPtr.Zero, GetCurrentThreadId());
+                    this.SendMessageHook = SetWindowsHookEx(WH_CALLWNDPROCRET, pSendMessageHook_Callback, IntPtr.Zero, GetCurrentThreadId());
                     if (this.SendMessageHook.IsInvalid)
                     {
                         throw new Win32Exception();
@@ -315,7 +325,15 @@ namespace Itp.Win32.MdiHook.Server
                         }
                     }
 
-                    lResult = CallNextHookEx(GetMessageHook, nCode, wParam, lParam);
+                    if (!IsDisposed)
+                    {
+                        // If this were called when disposed, this would throw a "Safe handle is closed" exception
+                        lResult = CallNextHookEx(GetMessageHook, nCode, wParam, lParam);
+                    }
+                    else
+                    {
+                        lResult = IntPtr.Zero;
+                    }
                 }
 
                 return lResult;
@@ -336,10 +354,10 @@ namespace Itp.Win32.MdiHook.Server
                     {
                         try
                         {
-                            var st = Marshal.PtrToStructure<CWPSTRUCT>(lParam);
+                            var st = Marshal.PtrToStructure<CWPRETSTRUCT>(lParam);
                             //Debug.WriteLine("HC_ACTION hwnd: {0:x8} msg {1:x4} wp {2:x8} lp {3:x8}",
                             //    st.hwnd.ToInt32(), st.message, st.wParam.ToInt32(), st.lParam.ToInt32());
-                            Callback(st.hwnd, st.message, st.wParam, st.lParam, IntPtr.Zero);
+                            Callback(st.hwnd, st.message, st.wParam, st.lParam, st.lResult);
                         }
                         catch (Exception ex)
                         {
@@ -347,7 +365,15 @@ namespace Itp.Win32.MdiHook.Server
                         }
                     }
 
-                    lResult = CallNextHookEx(GetMessageHook, nCode, wParam, lParam);
+                    if (!IsDisposed)
+                    {
+                        // If this were called when disposed, this would throw a "Safe handle is closed" exception
+                        lResult = CallNextHookEx(GetMessageHook, nCode, wParam, lParam);
+                    }
+                    else
+                    {
+                        lResult = IntPtr.Zero;
+                    }
                 }
 
                 return lResult;
