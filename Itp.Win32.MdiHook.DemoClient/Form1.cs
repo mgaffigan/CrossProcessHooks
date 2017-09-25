@@ -14,8 +14,10 @@ namespace Itp.Win32.MdiHook.DemoClient
 {
     public partial class Form1 : Form
     {
+        ForeignProcess wpfWindow;
         ForeignMdiWindow window;
         IntPtr notepad;
+        IntPtr wpfWindowIntPtr;
 
         public Form1()
         {
@@ -30,7 +32,8 @@ namespace Itp.Win32.MdiHook.DemoClient
             {
                 foreach (var a in this.Controls.Cast<Control>())
                 {
-                    if (a == btHookNotepad)
+                    if (a == btHookNotepad
+                        || a == btHookWpf)
                     {
                         // no-op
                     }
@@ -39,6 +42,17 @@ namespace Itp.Win32.MdiHook.DemoClient
                         a.Enabled = false;
                     }
                 }
+            }
+
+            var demoWpfProcess = Process.GetProcessesByName("Itp.Win32.DemoWpfTarget").SingleOrDefault();
+            if (demoWpfProcess != null)
+            {
+                wpfWindow = ForeignProcess.Get(demoWpfProcess);
+                wpfWindowIntPtr = demoWpfProcess.MainWindowHandle;
+            }
+            else
+            {
+                btHookWpf.Enabled = false;
             }
         }
 
@@ -117,5 +131,11 @@ namespace Itp.Win32.MdiHook.DemoClient
         [DllImport(User32, SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr childAfter, string className, string windowTitle);
 
+        private void btHookWpf_Click(object sender, EventArgs e)
+        {
+            var newWindow = new WpfLogForm(wpfWindow, wpfWindowIntPtr);
+            newWindow.Owner = this;
+            newWindow.Show();
+        }
     }
 }

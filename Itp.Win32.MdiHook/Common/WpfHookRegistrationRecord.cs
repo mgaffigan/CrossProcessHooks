@@ -13,7 +13,7 @@ using System.Xml;
 namespace Itp.Win32.MdiHook.IPC
 {
     [ComVisible(true)]
-    public struct HookRegistrationRecord
+    public struct WpfHookRegistrationRecord
     {
         public IntPtr HWnd;
 
@@ -25,7 +25,7 @@ namespace Itp.Win32.MdiHook.IPC
 
         public Type HookType
         {
-            get { return GetTypeForString(HookFullyQualifiedTypeName, HookCodebase); }
+            get { return HookRegistrationRecord.GetTypeForString(HookFullyQualifiedTypeName, HookCodebase); }
             private set
             {
                 Contract.Requires(value != null);
@@ -43,7 +43,7 @@ namespace Itp.Win32.MdiHook.IPC
 
         public Type ParameterType
         {
-            get { return GetTypeForString(ParameterFullyQualifiedTypeName, ParameterCodebase); }
+            get { return HookRegistrationRecord.GetTypeForString(ParameterFullyQualifiedTypeName, ParameterCodebase); }
             private set
             {
                 if (value == null)
@@ -98,34 +98,6 @@ namespace Itp.Win32.MdiHook.IPC
             }
         }
 
-        public IMessageHookHandler<object> CreateHandler()
-        {
-            var tHandler = HookType;
-            var tParam = ParameterType;
-            if (tParam == null)
-            {
-                return (IMessageHookHandler<object>)Activator.CreateInstance(tHandler);
-            }
-
-            foreach (var ctor in tHandler.GetConstructors())
-            {
-                var paramList = ctor.GetParameters();
-                if (paramList.Length != 1)
-                {
-                    continue;
-                }
-                var tCtorParam = paramList.Single().ParameterType;
-                if (!tCtorParam.IsAssignableFrom(tParam))
-                {
-                    continue;
-                }
-
-                return (IMessageHookHandler<object>)ctor.Invoke(new[] { Parameter });
-            }
-
-            throw new NotSupportedException("No suitable constructor found");
-        }
-
         [MarshalAs(UnmanagedType.BStr)]
         public string ResultFullyQualifiedTypeName;
 
@@ -134,7 +106,7 @@ namespace Itp.Win32.MdiHook.IPC
 
         public Type ResultType
         {
-            get { return GetTypeForString(ResultFullyQualifiedTypeName, ResultCodebase); }
+            get { return HookRegistrationRecord.GetTypeForString(ResultFullyQualifiedTypeName, ResultCodebase); }
             private set
             {
                 Contract.Requires(value != null);
@@ -144,26 +116,9 @@ namespace Itp.Win32.MdiHook.IPC
             }
         }
 
-        internal static Type GetTypeForString(string fqtn, string codebase)
+        public static WpfHookRegistrationRecord Create(IntPtr hWnd, Type tHook, Type tResult, object param)
         {
-            if (fqtn == null)
-            {
-                return null;
-            }
-
-            var t = Type.GetType(fqtn, throwOnError: false);
-            if (t == null)
-            {
-                var loc = Path.GetDirectoryName(codebase);
-                AssemblySearchPath.AddLoadLocation(loc);
-                Assembly.LoadFrom(codebase);
-            }
-            return Type.GetType(fqtn, throwOnError: true);
-        }
-
-        public static HookRegistrationRecord Create(IntPtr hWnd, Type tHook, Type tResult, object param)
-        {
-            return new HookRegistrationRecord()
+            return new WpfHookRegistrationRecord()
             {
                 HWnd = hWnd,
                 HookType = tHook,

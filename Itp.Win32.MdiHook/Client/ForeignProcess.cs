@@ -109,5 +109,17 @@ namespace Itp.Win32.MdiHook
             var rh = Hook.RegisterHook(record, source.ComProxy);
             return new ForeignHook<T>(rh, source);
         }
+
+        public ForeignWpfHook<T> HookWpfWindow<T>(IntPtr hWnd, Type tHandler, object oParam = null)
+            where T : class
+        {
+            Contract.Requires(tHandler != null);
+            Contract.Requires(typeof(IWpfWindowHook).IsAssignableFrom(tHandler));
+
+            var source = new DcsMarshalledSource<T>();
+            var record = WpfHookRegistrationRecord.Create(hWnd, tHandler, typeof(T), oParam);
+            var rh = Hook.RegisterWpfHook(record, source.ComProxy);
+            return new ForeignWpfHook<T>(rh, source);
+        }
     }
 }

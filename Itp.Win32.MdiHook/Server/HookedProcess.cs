@@ -49,5 +49,10 @@ namespace Itp.Win32.MdiHook.Server
         {
             return HookManager.AddRegistration(hook, observer);
         }
+
+        public IWpfWindowHook RegisterWpfHook(WpfHookRegistrationRecord hook, IDcsMarshalledObserver observer)
+        {
+            return WpfHookManager.Hook(hook, observer);
+        }
     }
 }

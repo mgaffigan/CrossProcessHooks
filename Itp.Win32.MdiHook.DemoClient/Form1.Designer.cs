@@ -34,6 +34,7 @@
             this.btCloseLast = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
             this.btHookNotepad = new System.Windows.Forms.Button();
+            this.btHookWpf = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // button1
@@ -88,21 +89,32 @@
             this.button4.UseVisualStyleBackColor = true;
             this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
-            // button5
+            // btHookNotepad
             // 
             this.btHookNotepad.Location = new System.Drawing.Point(72, 172);
-            this.btHookNotepad.Name = "button5";
+            this.btHookNotepad.Name = "btHookNotepad";
             this.btHookNotepad.Size = new System.Drawing.Size(149, 23);
             this.btHookNotepad.TabIndex = 5;
             this.btHookNotepad.Text = "Hook Notepad";
             this.btHookNotepad.UseVisualStyleBackColor = true;
             this.btHookNotepad.Click += new System.EventHandler(this.button5_Click);
             // 
+            // btHookWpf
+            // 
+            this.btHookWpf.Location = new System.Drawing.Point(72, 201);
+            this.btHookWpf.Name = "btHookWpf";
+            this.btHookWpf.Size = new System.Drawing.Size(149, 23);
+            this.btHookWpf.TabIndex = 6;
+            this.btHookWpf.Text = "Hook WPF";
+            this.btHookWpf.UseVisualStyleBackColor = true;
+            this.btHookWpf.Click += new System.EventHandler(this.btHookWpf_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(284, 261);
+            this.Controls.Add(this.btHookWpf);
             this.Controls.Add(this.btHookNotepad);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.btCloseLast);
@@ -123,6 +135,7 @@
         private System.Windows.Forms.Button btCloseLast;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.Button btHookNotepad;
+        private System.Windows.Forms.Button btHookWpf;
     }
 }
 

@@ -113,7 +113,7 @@ namespace Itp.Win32.MdiHook.IPC
         }
     }
 
-    internal sealed class DcsMarshalledProxy
+    internal class DcsMarshalledProxy
     {
         private readonly DataContractSerializer dcs;
         private readonly Type T;
@@ -156,6 +156,20 @@ namespace Itp.Win32.MdiHook.IPC
                     Target.OnNext(sw.ToString());
                 }
             }
+        }
+    }
+
+    internal sealed class DcsMarshalledProxy<TResult> : DcsMarshalledProxy, IObserver<TResult>
+        where TResult : class
+    {
+        public DcsMarshalledProxy(IDcsMarshalledObserver target) 
+            : base(target, typeof(TResult))
+        {
+        }
+
+        public void OnNext(TResult value)
+        {
+            base.OnNext(value);
         }
     }
 }
