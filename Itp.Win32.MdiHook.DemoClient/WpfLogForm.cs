@@ -29,6 +29,7 @@ namespace Itp.Win32.MdiHook.DemoClient
                 .Subscribe(
                     t => lbLog.Items.Add(t.Message),
                     () => Close());
+            this.Hook.Invoke();
         }
 
         public ForeignProcess Process { get; private set; }
@@ -70,9 +71,6 @@ namespace Itp.Win32.MdiHook.DemoClient
 
             tbArbitrary = (WpfTextBox)frameworkElement.FindName("tbArbitrary");
             tbArbitrary.TextChanged += tbArbitrary_TextChanged;
-
-            tbTime_TextChanged(null, null);
-            tbArbitrary_TextChanged(null, null);
         }
 
         private void tbArbitrary_TextChanged(object sender, EventArgs e)
@@ -89,6 +87,12 @@ namespace Itp.Win32.MdiHook.DemoClient
         {
             tbTime.TextChanged -= tbTime_TextChanged;
             tbArbitrary.TextChanged -= tbArbitrary_TextChanged;
+        }
+
+        public void Invoke()
+        {
+            tbTime_TextChanged(null, null);
+            tbArbitrary_TextChanged(null, null);
         }
     }
 }

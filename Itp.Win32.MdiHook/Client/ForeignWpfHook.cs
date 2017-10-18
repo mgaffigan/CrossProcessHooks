@@ -11,7 +11,7 @@ namespace Itp.Win32.MdiHook
     public sealed class ForeignWpfHook<T> : IObservable<T>, IDisposable
         where T : class
     {
-        private readonly IWpfWindowHook Hook;
+        public IWpfWindowHook Hook { get; }
         private readonly DcsMarshalledSource<T> Source;
 
         public ForeignWpfHook(IWpfWindowHook hook, DcsMarshalledSource<T> source)
@@ -36,5 +36,7 @@ namespace Itp.Win32.MdiHook
         {
             return Source.Subscribe(observer);
         }
+
+        public void Invoke() => Hook.Invoke();
     }
 }

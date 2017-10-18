@@ -12,5 +12,6 @@ namespace Itp.Win32.MdiHook.IPC
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     public interface IWpfWindowHook : IDisposable
     {
+        void Invoke();
     }
 }
