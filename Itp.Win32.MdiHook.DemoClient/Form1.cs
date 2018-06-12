@@ -56,11 +56,11 @@ namespace Itp.Win32.MdiHook.DemoClient
             }
         }
 
-        MdiWindowSample last;
+        SurrogatedMdiChild last;
 
         private void button1_Click(object sender, EventArgs e)
         {
-            window.ShowWindow(last = new MdiWindowSample()
+            window.ShowWindow(last = new SizeContentSample()
             {
                 SurrogateLocation = new Point(100, 100),
                 SurrogateSize = new Size(250, 600)
@@ -90,6 +90,8 @@ namespace Itp.Win32.MdiHook.DemoClient
                 try
                 {
                     child.SurrogateLocation = new Point((int)xLoc, (int)yLoc);
+                    child.SurrogateSize = new Size((int)xLoc, (int)yLoc);
+                    child.Text = new Rectangle(child.SurrogateLocation, child.SurrogateSize).ToString();
                 }
                 catch
                 {

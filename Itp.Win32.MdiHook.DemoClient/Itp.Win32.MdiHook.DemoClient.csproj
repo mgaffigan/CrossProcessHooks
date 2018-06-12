@@ -100,6 +100,12 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="SizeContentSample.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SizeContentSample.Designer.cs">
+      <DependentUpon>SizeContentSample.cs</DependentUpon>
+    </Compile>
     <Compile Include="MdiWindowSample.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -122,6 +128,9 @@
     </Compile>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SizeContentSample.resx">
+      <DependentUpon>SizeContentSample.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MdiWindowSample.resx">
       <DependentUpon>MdiWindowSample.cs</DependentUpon>
