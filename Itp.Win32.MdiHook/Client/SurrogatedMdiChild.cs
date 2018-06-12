@@ -175,6 +175,11 @@ namespace Itp.Win32.MdiHook
             // no-op, may be overridden
         }
 
+        private void OnDestroy()
+        {
+            Surrogate = null;
+        }
+
         private sealed class SurrogatedMdiChildContentProxy : StandardOleMarshalObject, ISurrogateMdiChildContent
         {
             private SurrogatedMdiChild SurrogateContent;
@@ -188,8 +193,13 @@ namespace Itp.Win32.MdiHook
 
             public void Close()
             {
-                SurrogateContent?.OnClosing();
-                SurrogateContent = null;
+                var content = SurrogateContent;
+                if (content != null)
+                {
+                    content.OnClosing();
+                    content.OnDestroy();
+                    SurrogateContent = null;
+                }
             }
 
             public void Ping()

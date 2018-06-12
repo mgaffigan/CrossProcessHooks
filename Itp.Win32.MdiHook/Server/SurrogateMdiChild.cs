@@ -26,9 +26,10 @@ namespace Itp.Win32.MdiHook.Server
         private HookedMdiWindow Parent;
         private bool IsResizable;
         private bool IsMovable;
+        private bool IsDestroyed;
         private ISurrogateMdiChildContent ChildContent;
 
-        private readonly SurrogateMdiChildControl Surrogate;
+        private SurrogateMdiChildControl Surrogate;
 
         IntPtr ISurrogateMdiChild.ContentPanelHandle => Surrogate.Handle;
 
@@ -37,7 +38,9 @@ namespace Itp.Win32.MdiHook.Server
             get { return Surrogate.Text; }
             set
             {
+                AssertAlive();
                 Surrogate.AssertThread();
+
                 Surrogate.Text = value;
             }
         }
@@ -47,7 +50,9 @@ namespace Itp.Win32.MdiHook.Server
             get { return Surrogate.Visible; }
             set
             {
+                AssertAlive();
                 Surrogate.AssertThread();
+
                 Surrogate.Visible = value;
             }
         }
@@ -57,7 +62,9 @@ namespace Itp.Win32.MdiHook.Server
             get { return Surrogate.ClientSize; }
             set
             {
+                AssertAlive();
                 Surrogate.AssertThread();
+
                 Surrogate.ClientSize = value;
             }
         }
@@ -67,13 +74,17 @@ namespace Itp.Win32.MdiHook.Server
             get { return Surrogate.Location; }
             set
             {
+                AssertAlive();
                 Surrogate.AssertThread();
+
                 Surrogate.Location = value;
             }
         }
 
         void ISurrogateMdiChild.Close()
         {
+            AssertAlive();
+
             Surrogate.Close();
         }
 
@@ -105,6 +116,40 @@ namespace Itp.Win32.MdiHook.Server
             SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
         }
 
+        private void AssertAlive()
+        {
+            if (IsDestroyed)
+            {
+                throw new ObjectDisposedException(nameof(SurrogateMdiChild));
+            }
+        }
+
+        // called by Surrogate
+        private void OnDestroy()
+        {
+            if (IsDestroyed)
+            {
+                return;
+            }
+            IsDestroyed = true;
+
+            // GC Roots:
+            // - Parent.SurrogatedChildren
+            //   released via Parent.NotifyClosed(this)
+            // - UI -> SurrogateMdiChildControl
+            //   released in WM_DESTROY (caller to this method)
+            // - CCW -> this 
+            //   not in our control, so we have to minimize held references
+
+            // Held references:
+            // - ChildContent (CCW)
+            // - Surrogate
+
+            ChildContent = null;
+            Surrogate = null;
+            Parent.NotifyClosed(this);
+        }
+
         public sealed class SurrogateMdiChildControl : Control
         {
             private SurrogateMdiChild Proxy;
@@ -134,14 +179,18 @@ namespace Itp.Win32.MdiHook.Server
                     // no WS_EX_APPWINDOW since we don't show in taskbar
                     // WS_EX_DLGMODALFRAME for no icon
                     cp.ExStyle = WS_EX_MDICHILD | WS_EX_WINDOWEDGE | WS_EX_DLGMODALFRAME;
-                    
+
                     return cp;
                 }
             }
 
             protected override void WndProc(ref Message m)
             {
-                if (m.Msg == WM_SYSCHAR)
+                if (Proxy == null)
+                {
+                    // we're already destroyed, no-op
+                }
+                else if (m.Msg == WM_SYSCHAR)
                 {
                     // for some reason, we get a deadlock when Ctrl+Spacebar is pressed with a 
                     // foreign window focused.  That happens on processing of WM_SYSCHAR
@@ -171,8 +220,11 @@ namespace Itp.Win32.MdiHook.Server
                         Debug.WriteLine(ex);
                         // no-op, allow the close
                     }
-
-                    this.Proxy.Parent.NotifyClosed(this.Proxy);
+                }
+                else if (m.Msg == WM_DESTROY)
+                {
+                    this.Proxy.OnDestroy();
+                    this.Proxy = null;
                 }
                 else if (m.Msg == WM_EXITSIZEMOVE)
                 {
@@ -230,6 +282,11 @@ namespace Itp.Win32.MdiHook.Server
         // may be called from finalizer thread via HookedMdiWindow
         public void ForceClose()
         {
+            if (IsDestroyed)
+            {
+                return;
+            }
+
             this.Surrogate.BeginInvoke(new Action(() =>
             {
                 this.Surrogate.Visible = false;
